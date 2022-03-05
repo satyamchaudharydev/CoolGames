@@ -1,12 +1,49 @@
 import "./App.css";
 import { useState, useEffect } from "react";
+
 const boardArray = [
-  ["", "", "", "", ""],
-  ["", "", "", "", ""],
-  ["", "", "", "", ""],
-  ["", "", "", "", ""],
-  ["", "", "", "", ""],
-  ["", "", "", "", ""],
+  [
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+  ],
+  [
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+  ],
+  [
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+  ],
+  [
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+  ],
+  [
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+  ],
+  [
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+    { text: "", state: "" },
+  ],
 ];
 const keysData = [
   "Q",
@@ -48,16 +85,15 @@ let currentTile = 0;
 function App() {
   const [board, setBoard] = useState(boardArray);
   const [active, setActive] = useState([]);
-  const [correctTiles, setCorrectTiles] = useState([]);
-  const [wrongTiles, setWrongTiles] = useState([]);
-  const [wrongPlacedTiles, setWrongPlacedTiles] = useState([]);
+  const [end, setEnded] = useState(false);
+  
 
   function addLetter(letter) {
     console.log(setActive((prev) => [...prev, letter]));
     setActive((prev) => [...prev, letter]);
     if (currentTile < tileLength) {
       let newBoard = [...board];
-      newBoard[currentRow][currentTile] = letter;
+      newBoard[currentRow][currentTile].text = letter;
       setBoard(newBoard);
       currentTile++;
     }
@@ -66,27 +102,44 @@ function App() {
     if (currentTile > 0) {
       currentTile--;
       let newBoard = [...board];
-      newBoard[currentRow][currentTile] = "";
+      newBoard[currentRow][currentTile].text = "";
       setBoard(newBoard);
     }
   }
+
   function checkRow(key) {
+  
     if (currentTile === tileLength) {
       board[currentRow].forEach((tile, index) => {
-        if (tile.toUpperCase() == wordle[index].toUpperCase()) {
-          setCorrectTiles((prev) => [...prev, tile]);
-        } else if (wordle.toUpperCase().includes(tile.toUpperCase())) {
-          setWrongPlacedTiles((prev) => [...prev, tile]);
-        } else {
-          setWrongTiles((prev) => [...prev, tile]);
-        }
+        setTimeout(() => {
+          
+          if (tile.text.toUpperCase() == wordle[index].toUpperCase()) {
+            let newBoard = [...board];
+            newBoard[currentRow][index].state = "correct flip";
+            setBoard(newBoard);
+          } else if (wordle.toUpperCase().includes(tile.text.toUpperCase())) {
+            let newBoard = [...board];
+            newBoard[currentRow][index].state = "wrong-location flip";
+            setBoard(newBoard);
+          } else {
+            let newBoard = [...board];
+            newBoard[currentRow][index].state = "wrong flip";
+            setBoard(newBoard);
+          }
+          
+        }, (500 * index) / 2);
       });
-      currentRow++;
-      setActive([]);
-      currentTile = 0;
-      return;
     }
   }
+  useEffect(() => {
+    const tiles = document.querySelectorAll(".tile");
+    tiles.forEach((tile) => {
+      tile.addEventListener("transitionend", (e) => {
+        tile.classList.remove("flip");
+      }
+    )});
+  },[checkRow]);
+
   useEffect(() => {
     window.addEventListener("keypress", (e) => {
       if (keysData.includes(e.key.toUpperCase())) {
@@ -97,19 +150,9 @@ function App() {
         deleteLetter();
       }
     });
-  }, [window]);
 
-  function addColor(text) {
-    if (correctTiles.includes(text)) {
-      return "correct";
-    }
-    if (wrongPlacedTiles.includes(text)) {
-      return "wrong-location";
-    }
-    if (wrongTiles.includes(text)) {
-      return "wrong";
-    }
-  }
+  }, []);
+
   return (
     <>
       <div className="board">
@@ -118,12 +161,14 @@ function App() {
             return row.map((col, j) => {
               return (
                 <div
-                  className={`tile ${
-                    active.includes(currentRow === i && col) && "active"
-                  }` + ` ${addColor(col)}`}
+                  className={
+                    `tile ${
+                      active.includes(currentRow === i && col.text) && "active"
+                    }` + ` ${col.state}`
+                  }
                   key={j}
                 >
-                  {col}
+                  {col.text}
                 </div>
               );
             });
